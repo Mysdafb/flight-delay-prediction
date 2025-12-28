@@ -4,10 +4,20 @@ version = "0.1.0"
 description = "A machine learning project that analyzes historical flight data to predict flight delays."
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "numpy>=2.2.6",
+    "pandas>=2.3.3",
+    "scikit-learn>=1.7.2",
+]
 license-files = ["LICENSE"]
 
 [dependency-groups]
 dev = [
+    "matplotlib>=3.10.8",
     "pre-commit>=4.5.1",
+    "seaborn>=0.13.2",
+]
+test = [
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
 ]
