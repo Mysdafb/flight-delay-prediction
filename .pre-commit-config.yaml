@@ -14,7 +14,7 @@ repos:
         args: ["--pytest-test-first"]
         exclude: 'docs/.*'
     -   id: check-added-large-files
-        args: ["--maxkb=10"]
+        args: ["--maxkb=50"]
     -   id: check-docstring-first
         exclude: 'docs/.*'
     -   id: check-case-conflict
