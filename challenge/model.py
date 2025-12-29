@@ -41,8 +41,7 @@ class DataProcessor:
         self.data = data.copy()
         self.targets: pd.DataFrame | None = None
         self._thresh_in_minutes = thresh_in_minutes
-        self.compute_columns()
-        self._check_for_targets(target_column)
+        self._target_col = target_column
 
     def _check_for_targets(self, target_column: str | None) -> None:
         if target_column is not None:
@@ -165,6 +164,8 @@ class DataProcessor:
             self.data["min_diff"] > self._thresh_in_minutes, 1, 0
         )
 
+        self._check_for_targets(self._target_col)
+
     def get_features(self) -> pd.DataFrame:
         """
         Generates a feature matrix using one-hot encoding for categorical variables.
@@ -198,7 +199,7 @@ class DataProcessor:
             ],
             axis=1,
         )
-        return features[self.FEATURES_COLS]
+        return features.reindex(columns=self.FEATURES_COLS, fill_value=0)
 
 
 class DelayModel:
@@ -226,6 +227,11 @@ class DelayModel:
             pd.DataFrame: features.
         """
         self.processor = DataProcessor(data, target_column)
+
+        if target_column is not None:
+            # Will create delay only for training and save computations during inference
+            self.processor.compute_columns()
+
         if self.processor.targets is not None:
             return self.processor.get_features(), self.processor.targets
 
