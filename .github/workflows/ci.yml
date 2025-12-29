@@ -35,10 +35,9 @@ jobs:
         run: |
           pre-commit run --all-files --show-diff-on-failure
 
-  model-test:
+  model-tests:
     name: Model tests
     runs-on: ubuntu-latest
-    needs: pre-commit
 
     steps:
       - name: Checkout repository
@@ -54,7 +53,20 @@ jobs:
           curl -LsSf https://astral.sh/uv/install.sh | sh
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Sync dependencies from lock file
+      - name: Install gcloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Authenticate to Google Cloud
+        run: |
+          echo '${{ secrets.GCP_SA_KEY }}' > gcp-key.json
+          gcloud auth activate-service-account --key-file=gcp-key.json
+
+      - name: Download training data from GCS
+        run: |
+          mkdir -p data
+          gsutil cp gs://flight-delay-ci-data/data.csv data/data.csv
+
+      - name: Sync dependencies
         run: |
           uv sync --group test
 
