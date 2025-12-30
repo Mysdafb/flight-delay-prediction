@@ -22,7 +22,7 @@ COPY uv.lock /app/uv.lock
 COPY pyproject.toml /app/project.toml
 COPY challenge /app/challenge
 
-RUN uv sync --group cloud --no-dev --lockfile /app/uv.lock
+RUN uv sync --group cloud --no-dev
 
 EXPOSE 8080
 
