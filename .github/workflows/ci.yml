@@ -68,11 +68,11 @@ jobs:
 
       - name: Sync dependencies
         run: |
-          uv sync --group test
+          uv sync --group test --group cloud
 
       - name: Run model tests
         run: |
-          uv run --group test make model-test
+          uv run make model-test
 
   api-tests:
     name: API tests
