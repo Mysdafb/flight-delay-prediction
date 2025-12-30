@@ -24,6 +24,7 @@ dev = [
 ]
 test = [
     "httpx>=0.28.1",
+    "mockito>=1.5.5",
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
 ]

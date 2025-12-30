@@ -47,16 +47,17 @@ def load_environment_variables() -> EnvironmentVariables:
 
 def download_model_from_gcp(env_vars: EnvironmentVariables) -> None:
     """Downloads the model from GCP Storage to a local path."""
-    client = storage.Client()
-    bucket = client.bucket(env_vars.gcp_bucket_name)
-    blob = bucket.blob(env_vars.gcp_model_path)
+    if not os.path.exists(env_vars.local_model_path):
+        client = storage.Client()
+        bucket = client.bucket(env_vars.gcp_bucket_name)
+        blob = bucket.blob(env_vars.gcp_model_path)
 
-    if not blob.exists():
-        raise FileNotFoundError(
-            f"Model not found: gs://{env_vars.gcp_bucket_name}/{env_vars.gcp_model_path}"
-        )
+        if not blob.exists():
+            raise FileNotFoundError(
+                f"Model not found: gs://{env_vars.gcp_bucket_name}/{env_vars.gcp_model_path}"
+            )
 
-    blob.download_to_filename(env_vars.local_model_path)
+        blob.download_to_filename(env_vars.local_model_path)
 
 
 app = fastapi.FastAPI()
