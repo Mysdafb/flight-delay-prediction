@@ -19,7 +19,7 @@ WORKDIR /app
 COPY uv.lock /app/uv.lock
 COPY challenge /app/challenge
 
-RUN uv sync --lockfile /app/uv.lock
+RUN uv sync --group cloud --no-dev --lockfile /app/uv.lock
 
 EXPOSE 8080
 
