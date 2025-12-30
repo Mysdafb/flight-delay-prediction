@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "fastapi>=0.128.0",
+    "joblib>=1.5.3",
     "numpy>=2.2.6",
     "pandas>=2.3.3",
     "scikit-learn>=1.7.2",
@@ -13,12 +14,17 @@ dependencies = [
 license-files = ["LICENSE"]
 
 [dependency-groups]
+cloud = [
+    "google-cloud-storage>=3.7.0",
+]
 dev = [
     "matplotlib>=3.10.8",
     "pre-commit>=4.5.1",
     "seaborn>=0.13.2",
 ]
 test = [
+    "httpx>=0.28.1",
+    "mockito>=1.5.5",
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
 ]

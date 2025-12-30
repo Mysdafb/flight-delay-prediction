@@ -319,12 +319,6 @@ class DelayModel:
         Returns:
             (List[int]): predicted targets.
         """
-        try:
-            self.load()
-        except Exception as e:
-            msg = f"No module defined. {e}"
-            logging.error(msg)
-
         if self._model is None:
             logging.warning("Inference process failed.")
             return [0] * features.shape[0]
@@ -371,4 +365,4 @@ class DelayModel:
         if not isinstance(model, LogisticRegression):
             raise ValueError(f"The model loaded is not supported: {path}.")
 
-        return model
+        self._model = model
