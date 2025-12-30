@@ -19,7 +19,7 @@ ENV PATH="/root/.local/bin/:$PATH"
 WORKDIR /app
 
 COPY uv.lock /app/uv.lock
-COPY pyproject.toml /app/project.toml
+COPY pyproject.toml /app/pyproject.toml
 COPY challenge /app/challenge
 
 RUN uv sync --group cloud --no-dev
