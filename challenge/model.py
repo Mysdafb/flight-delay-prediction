@@ -1,3 +1,4 @@
+import dataclasses
 import joblib
 import logging
 from datetime import datetime, time
@@ -5,6 +6,43 @@ from datetime import datetime, time
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
+
+
+@dataclasses.dataclass(frozen=True)
+class Constants:
+    """Holds constant values for columns."""
+
+    MES: set[int] = dataclasses.field(default_factory=lambda: set(range(1, 13)))
+    TIPOVUELO: set[str] = dataclasses.field(
+        default_factory=lambda: {"N", "I"}
+    )  # Nacional, Internacional
+    OPERA: set[str] = dataclasses.field(
+        default_factory=lambda: {
+            "American Airlines",
+            "Air Canada",
+            "Air France",
+            "Aeromexico",
+            "Aerolineas Argentinas",
+            "Austral",
+            "Avianca",
+            "Alitalia",
+            "British Airways",
+            "Copa Air",
+            "Delta Air",
+            "Gol Trans",
+            "Iberia",
+            "K.L.M.",
+            "Qantas Airways",
+            "United Airlines",
+            "Grupo LATAM",
+            "Sky Airline",
+            "Latin American Wings",
+            "Plus Ultra Lineas Aereas",
+            "JetSmart SPA",
+            "Oceanair Linhas Aereas",
+            "Lacsa",
+        }
+    )
 
 
 class DataProcessor:
@@ -16,6 +54,7 @@ class DataProcessor:
         targets (Optional[pd.Series]): Target vector if provided.
     """
 
+    CONSTANTS = Constants()
     FEATURES_COLS = [
         "OPERA_Latin American Wings",
         "MES_7",
@@ -50,6 +89,20 @@ class DataProcessor:
 
             self.targets = self.data[target_column].to_frame()
             self.data = self.data.drop(columns=[target_column])
+
+    def _input_sanity_checks(self) -> None:
+        """
+        Validates input data for expected values and formats.
+
+        Raises:
+            ValueError: If any of the checks fail.
+        """
+        for col, valid_values in dataclasses.asdict(self.CONSTANTS).items():
+            invalid_values = set(self.data[col].unique()) - valid_values
+            if invalid_values:
+                raise ValueError(
+                    f"Column '{col}' contains invalid values: {invalid_values}"
+                )
 
     @staticmethod
     def get_period_day(date: str) -> str:
@@ -191,6 +244,7 @@ class DataProcessor:
             pd.DataFrame: A DataFrame containing the one-hot encoded features,
             where each column represents a binary indicator for a category.
         """
+        self._input_sanity_checks()
         features = pd.concat(
             [
                 pd.get_dummies(self.data["OPERA"], prefix="OPERA"),
