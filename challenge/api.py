@@ -74,7 +74,6 @@ async def post_predict(request: PredictRequest) -> PredictResponse:
     try:
         raw_data = pd.DataFrame([flight.model_dump() for flight in request.flights])
         env_vars = load_environment_variables()
-        print(env_vars, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         download_model_from_gcp(env_vars)
         model = DelayModel()
         model.load(env_vars.local_model_path)
