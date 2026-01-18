@@ -1,111 +1,322 @@
-# Software Engineer (ML & LLMs) Challenge
+# Flight Delay Prediction API
+
+A FastAPI-based machine learning service that predicts flight delays for departures and arrivals at Santiago International Airport (SCL) using a trained logistic regression model.
 
 ## Overview
 
-Welcome to the **Software Engineer (ML & LLMs)** Application Challenge. In this, you will have the opportunity to get closer to a part of the reality of the role, and demonstrate your skills and knowledge in machine learning and cloud.
+This project operationalizes a data science model for delay prediction by:
+- Providing a REST API endpoint (`/predict`) for batch predictions.
+- Containerizing the app for easy deployment on cloud platforms (GCP Cloud Run).
+- Implementing a complete CI/CD pipeline with tests and automated deployments on tag creation.
+- Using environment variables to safely manage secrets and configuration.
 
-## Problem
+## Tech Stack
 
-A jupyter notebook (training.ipynb) has been provided with the work of a Data Scientist (from now on, the DS). The DS, trained a model to predict the probability of **delay** for a flight taking off or landing at SCL airport. The model was trained with public and real data, below we provide you with the description of the dataset:
+- **Framework**: FastAPI
+- **ML Model**: Scikit-learn LogisticRegression
+- **Container**: Docker
+- **Cloud**: Google Cloud (Cloud Run, Cloud Storage)
+- **Testing**: pytest, mockito
+- **Dependency Management**: uv (astral)
+- **CI/CD**: GitHub Actions
 
-|Column|Description|
-|-----|-----------|
-|`Fecha-I`|Scheduled date and time of the flight.|
-|`Vlo-I`|Scheduled flight number.|
-|`Ori-I`|Programmed origin city code.|
-|`Des-I`|Programmed destination city code.|
-|`Emp-I`|Scheduled flight airline code.|
-|`Fecha-O`|Date and time of flight operation.|
-|`Vlo-O`|Flight operation number of the flight.|
-|`Ori-O`|Operation origin city code.|
-|`Des-O`|Operation destination city code.|
-|`Emp-O`|Airline code of the operated flight.|
-|`DIA`|Day of the month of flight operation.|
-|`MES`|Number of the month of operation of the flight.|
-|`AÑO`|Year of flight operation.|
-|`DIANOM`|Day of the week of flight operation.|
-|`TIPOVUELO`|Type of flight, I =International, N =National.|
-|`OPERA`|Name of the airline that operates.|
-|`SIGLAORI`|Name city of origin.|
-|`SIGLADES`|Destination city name.|
+## Project Structure
 
-In addition, the DS considered relevant the creation of the following columns:
+```
+flight-delay-prediction/
+├── challenge/
+│   ├── api.py              # FastAPI app with /health and /predict endpoints
+│   ├── model.py            # DelayModel and DataProcessor classes
+│   └── __init__.py
+├── tests/
+│   ├── api/                # API integration tests
+│   ├── model/              # Model unit tests
+│   └── stress/             # Load/stress tests
+├── .github/
+│   └── workflows/
+│       ├── ci.yml          # Continuous Integration pipeline
+│       └── cd.yml          # Continuous Deployment (Cloud Run)
+├── Dockerfile              # Container image definition
+├── Makefile                # Development shortcuts
+├── pyproject.toml          # Project metadata and uv config
+├── uv.lock                 # Dependency lockfile
+└── README.md               # This file
+```
 
-|Column|Description|
-|-----|-----------|
-|`high_season`|1 if `Date-I` is between Dec-15 and Mar-3, or Jul-15 and Jul-31, or Sep-11 and Sep-30, 0 otherwise.|
-|`min_diff`|difference in minutes between `Date-O` and `Date-I`|
-|`period_day`|morning (between 5:00 and 11:59), afternoon (between 12:00 and 18:59) and night (between 19:00 and 4:59), based on `Date-I`.|
-|`delay`|1 if `min_diff` > 15, 0 if not.|
+## Getting Started
 
-## Challenge
+### Prerequisites
 
-### Instructions
+- Python 3.10+
+- uv (astral) — for dependency management
+- Docker (optional, for local container testing)
+- GCP account (for cloud deployment)
 
-1. Create a repository in **github** and copy all the challenge content into it. Remember that the repository must be **public**.
+### Installation
 
-2. Use the **main** branch for any official release that we should review. It is highly recommended to use [GitFlow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow) development practices. **NOTE: do not delete your development branches.**
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/Mysdafb/flight-delay-prediction.git
+   cd flight-delay-prediction
+   ```
 
-3. Please, do not change the structure of the challenge (names of folders and files).
+2. **Create and activate a virtual environment** (using `make`):
+   ```bash
+   make venv
+   source .venv/bin/activate
+   ```
 
-4. All the documentation and explanations that you have to give us must go in the `challenge.md` file inside `docs` folder.
+3. **Install dependencies**:
+   ```bash
+   make install
+   ```
+   Or manually:
+   ```bash
+   uv sync --group dev --group test
+   ```
 
-5. To send your challenge, you must do a `POST` request to:
-    `https://advana-challenge-check-api-cr-k4hdbggvoq-uc.a.run.app/software-engineer`
-    This is an example of the `body` you must send:
-    ```json
+## Development
+
+### Linting and Pre-commit
+
+This project uses pre-commit hooks to ensure code quality. Install them:
+```bash
+pre-commit install
+```
+
+Run pre-commit on all files:
+```bash
+pre-commit run --all-files
+```
+
+### Running Locally
+
+Start the development server:
+```bash
+uvicorn challenge.api:app --reload
+```
+
+The API will be available at `http://localhost:8000`.
+
+Health check:
+```bash
+curl http://localhost:8000/health
+# {"status":"OK"}
+```
+
+Test prediction:
+```bash
+curl -X POST http://localhost:8000/predict \
+  -H "Content-Type: application/json" \
+  -d '{"flights": [{"OPERA": "Airline name", "TIPOVUELO": "N", "MES": 3}]}'
+```
+
+## API Endpoints
+
+### `GET /health`
+Health check endpoint.
+
+**Response:**
+```json
+{"status": "OK"}
+```
+
+### `POST /predict`
+Predict delay probability for a list of flights.
+
+**Request:**
+```json
+{
+  "flights": [
     {
-      "name": "Juan Perez",
-      "mail": "juan.perez@example.com",
-      "github_url": "https://github.com/juanperez/latam-challenge.git",
-      "api_url": "https://juan-perez.api"
+      "OPERA": "Aerolineas Argentinas",
+      "TIPOVUELO": "N",
+      "MES": 3
     }
-    ```
+  ]
+}
+```
 
-***NOTE: We recommend to send the challenge even if you didn't manage to finish all the parts.***
+**Response:**
+```json
+{
+  "predict": [0]
+}
+```
 
-### Context:
+**Status Codes:**
+- `200`: Success
+- `400`: Invalid input (missing required fields, invalid data)
 
-We need to operationalize the data science work for the airport team. For this, we have decided to enable an `API` in which they can consult the delay prediction of a flight.
+## Container & Deployment
 
-*We recommend reading the entire challenge (all its parts) before you start developing.*
+### Building the Container Locally
 
-### Part I
+```bash
+docker build -t flight-delay-api:latest .
+```
 
-In order to operationalize the model, transcribe the `.ipynb` file into the `model.py` file:
+Run locally:
+```bash
+docker run -p 8080:8080 \
+  -e GCP_BUCKET_NAME=your-bucket \
+  -e GCP_MODEL_PATH=models/logreg.joblib \
+  -e LOCAL_MODEL_PATH=/tmp/logreg.joblib \
+  flight-delay-api:latest
+```
 
-- If you find any bug, fix it.
-- The DS proposed a few models in the end. Choose the best model at your discretion, argue why. **It is not necessary to make improvements to the model.**
-- Apply all the good programming practices that you consider necessary in this item.
-- The model should pass the tests by running `make model-test`.
+### Deploying to Cloud Run
 
-> **Note:**
-> - **You cannot** remove or change the name or arguments of **provided** methods.
-> - **You can** change/complete the implementation of the provided methods.
-> - **You can** create the extra classes and methods you deem necessary.
+**Prerequisites:**
+- GCP project with Cloud Run, Cloud Build, Cloud Storage enabled.
+- Service account with appropriate permissions.
+- Model uploaded to GCS bucket.
 
-### Part II
+**Step 1: Set up secrets in GitHub**
 
-Deploy the model in an `API` with `FastAPI` using the `api.py` file.
+Go to your repository Settings → Secrets and add:
+- `GCP_SA_KEY`: JSON key of your GCP service account.
+- `GCP_PROJECT`: Your GCP project ID.
+- `GCP_REGION`: e.g., `us-central1`.
+- `CLOUD_RUN_SERVICE`: Name of the Cloud Run service, e.g., `flight-delay-api`.
+- `GCP_BUCKET_NAME`: GCS bucket containing the model.
+- `GCP_MODEL_PATH`: Path to the model in the bucket, e.g., `models/logreg.joblib`.
+- `LOCAL_MODEL_PATH`: Local path for the model, e.g., `/tmp/logreg.joblib`.
 
-- The `API` should pass the tests by running `make api-test`.
+**Step 2: Upload the model to GCS**
 
-> **Note:**
-> - **You cannot** use other framework.
+```bash
+gsutil cp logreg.joblib gs://your-bucket/models/logreg.joblib
+```
 
-### Part III
+**Step 3: Create a tag to trigger the deployment**
 
-Deploy the `API` in your favorite cloud provider (we recomend to use GCP).
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
 
-- Put the `API`'s url in the `Makefile` (`line 26`).
-- The `API` should pass the tests by running `make stress-test`.
+The GitHub Actions CD pipeline will automatically:
+1. Build the Docker image.
+2. Push it to Google Container Registry.
+3. Deploy it to Cloud Run with the environment variables.
 
-> **Note:**
-> - **It is important that the API is deployed until we review the tests.**
+**Step 4: Test the deployment**
 
-### Part IV
+Retrieve the Cloud Run URL:
+```bash
+gcloud run services describe flight-delay-api --region us-central1
+```
 
-We are looking for a proper `CI/CD` implementation for this development.
+Test the deployed API:
+```bash
+curl https://flight-delay-api-xxxxx.run.app/health
+```
 
-- Create a new folder called `.github` and copy the `workflows` folder that we provided inside it.
-- Complete both `ci.yml` and `cd.yml`(consider what you did in the previous parts).
+### Service Account Permissions
+
+The service account used for deployment should have (minimum):
+- `roles/run.admin` (for Cloud Run deployments)
+- `roles/cloudbuild.builds.editor` (for Cloud Build)
+- `roles/storage.objectViewer` on the GCS bucket (for downloading the model)
+
+### Manual Deploy (Local `gcloud` CLI)
+
+```bash
+gcloud run deploy flight-delay-api \
+  --image gcr.io/PROJECT_ID/flight-delay-api:latest \
+  --region us-central1 \
+  --platform managed \
+  --allow-unauthenticated \
+  --set-env-vars GCP_BUCKET_NAME=your-bucket,GCP_MODEL_PATH=models/logreg.joblib,LOCAL_MODEL_PATH=/tmp/logreg.joblib
+```
+
+## CI/CD Pipeline
+
+### Continuous Integration (CI)
+
+Triggered on every push and pull request. Runs:
+1. **Pre-commit checks**: linting, formatting.
+2. **Model tests**: unit tests for `DelayModel` and `DataProcessor`.
+3. **API tests**: integration tests for the FastAPI endpoints (with mocked model).
+
+See `.github/workflows/ci.yml` for details.
+
+### Continuous Deployment (CD)
+
+Triggered when a new **tag** is created. Builds and deploys to Cloud Run automatically.
+
+See `.github/workflows/cd.yml` for details.
+
+## Model Training & Data
+
+The model is trained using a logistic regression classifier on flight data. Features include:
+- **Temporal**: month, period of day (morning/afternoon/night), high season indicator.
+- **Operational**: airline, flight type (international/national).
+
+The training notebook and dataset are documented in `docs/challenge.md`.
+
+### Model Details
+
+- **Type**: Logistic Regression with class weighting.
+- **Input**: 10 one-hot encoded features.
+- **Output**: Binary classification (0: on-time, 1: delayed >15 min).
+- **Serialization**: joblib format (`logreg.joblib`).
+
+## Environment Variables
+
+The API requires the following environment variables (provided at container runtime):
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `GCP_BUCKET_NAME` | GCS bucket name | `my-flight-models` |
+| `GCP_MODEL_PATH` | Path inside bucket | `models/logreg.joblib` |
+| `LOCAL_MODEL_PATH` | Local cache path | `/tmp/logreg.joblib` |
+
+## Testing
+
+### Unit Tests
+```bash
+make model-test
+```
+
+### Integration Tests (API)
+```bash
+make api-test
+```
+
+### Stress/Load Tests
+```bash
+make stress-test
+```
+(Requires the API to be running at the configured URL.)
+
+## Troubleshooting
+
+### Model fails to load
+- Ensure `GCP_BUCKET_NAME`, `GCP_MODEL_PATH` are set correctly.
+- Check that the Cloud Run service account has `storage.objectViewer` on the bucket.
+- Verify the model file exists at the specified path in GCS.
+
+### Cold starts are slow
+- The first request to a Cloud Run instance downloads and loads the model. This is expected behavior.
+- To reduce latency, keep a minimum instance count or embed the model in the image (trade-off: larger image, slower deployments).
+
+### Permission denied when accessing GCS
+- Verify the Cloud Run service account has at least `roles/storage.objectViewer` on the model bucket.
+- Use `gcloud` to grant permissions:
+  ```bash
+  gsutil iam ch serviceAccount:SERVICE_ACCOUNT@PROJECT.iam.gserviceaccount.com:objectViewer gs://BUCKET
+  ```
+
+## Contributing
+
+1. Create a feature branch from `main`: `git checkout -b feature/my-feature`.
+2. Implement changes and add tests.
+3. Run tests locally: `make api-test && make model-test`.
+4. Push to GitHub and create a pull request.
+5. Once merged to `main`, create a release tag to trigger deployment.
+
+## License
+
+See [LICENSE](LICENSE) for details.

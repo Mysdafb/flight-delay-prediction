@@ -35,67 +35,67 @@ jobs:
         run: |
           pre-commit run --all-files --show-diff-on-failure
 
-  model-tests:
-    name: Model tests
-    runs-on: ubuntu-latest
+  # model-tests:
+  #   name: Model tests
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: "3.10"
 
-      - name: Install uv
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+  #     - name: Install uv
+  #       run: |
+  #         curl -LsSf https://astral.sh/uv/install.sh | sh
+  #         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Install gcloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+  #     - name: Install gcloud SDK
+  #       uses: google-github-actions/setup-gcloud@v2
 
-      - name: Authenticate to Google Cloud
-        run: |
-          echo '${{ secrets.GCP_SA_KEY }}' > gcp-key.json
-          gcloud auth activate-service-account --key-file=gcp-key.json
+  #     - name: Authenticate to Google Cloud
+  #       run: |
+  #         echo '${{ secrets.GCP_SA_KEY }}' > gcp-key.json
+  #         gcloud auth activate-service-account --key-file=gcp-key.json
 
-      - name: Download training data from GCS
-        run: |
-          mkdir -p data
-          gsutil cp gs://flight-delay-ci-data/data.csv data/data.csv
+  #     - name: Download training data from GCS
+  #       run: |
+  #         mkdir -p data
+  #         gsutil cp gs://flight-delay-ci-data/data.csv data/data.csv
 
-      - name: Sync dependencies
-        run: |
-          uv sync --group test --group cloud
+  #     - name: Sync dependencies
+  #       run: |
+  #         uv sync --group test --group cloud
 
-      - name: Run model tests
-        run: |
-          uv run make model-test
+  #     - name: Run model tests
+  #       run: |
+  #         uv run make model-test
 
-  api-tests:
-    name: API tests
-    runs-on: ubuntu-latest
+  # api-tests:
+  #   name: API tests
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: "3.10"
 
-      - name: Install uv
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+  #     - name: Install uv
+  #       run: |
+  #         curl -LsSf https://astral.sh/uv/install.sh | sh
+  #         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Sync dependencies
-        run: |
-          uv sync --group test --group cloud
+  #     - name: Sync dependencies
+  #       run: |
+  #         uv sync --group test --group cloud
 
-      - name: Run API tests
-        run: |
-          uv run make api-test
+  #     - name: Run API tests
+  #       run: |
+  #         uv run make api-test

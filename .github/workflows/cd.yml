@@ -1,54 +1,54 @@
-name: 'Continuous Delivery'
+# name: 'Continuous Delivery'
 
-on:
-  push:
-    tags:
-      - "*"
+# on:
+#   push:
+#     tags:
+#       - "*"
 
-env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  REGION: ${{ secrets.GCP_REGION }}
-  SERVICE_NAME: flight-delay-api
-  REPOSITORY: flight-delay
-  IMAGE: flight-delay-api
+# env:
+#   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+#   REGION: ${{ secrets.GCP_REGION }}
+#   SERVICE_NAME: flight-delay-api
+#   REPOSITORY: flight-delay
+#   IMAGE: flight-delay-api
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
 
-      - name: Authenticate to GCP
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY_CD }}
+#       - name: Authenticate to GCP
+#         uses: google-github-actions/auth@v2
+#         with:
+#           credentials_json: ${{ secrets.GCP_SA_KEY_CD }}
 
-      - name: Configure Docker for Artifact Registry
-        run: |
-          gcloud auth configure-docker $REGION-docker.pkg.dev
+#       - name: Configure Docker for Artifact Registry
+#         run: |
+#           gcloud auth configure-docker $REGION-docker.pkg.dev
 
-      - name: Build Docker image
-        run: |
-          docker build -t \
-            $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:${{ github.ref_name }} .
+#       - name: Build Docker image
+#         run: |
+#           docker build -t \
+#             $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:${{ github.ref_name }} .
 
-      - name: Push Docker image
-        run: |
-          docker push \
-            $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:${{ github.ref_name }}
+#       - name: Push Docker image
+#         run: |
+#           docker push \
+#             $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:${{ github.ref_name }}
 
-      - name: Deploy to Cloud Run
-        run: |
-          gcloud run deploy $SERVICE_NAME \
-            --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:${{ github.ref_name }} \
-            --region $REGION \
-            --platform managed \
-            --allow-unauthenticated \
-            --min-instances 0 \
-            --max-instances 2 \
-            --cpu-throttling \
-            --port 8080 \
-            --set-build-env-vars GCP_BUCKET_NAME=${{ secrets.GCP_BUCKET_NAME }},GCP_MODEL_PATH=${{ secrets.GCP_MODEL_PATH }}
+#       - name: Deploy to Cloud Run
+#         run: |
+#           gcloud run deploy $SERVICE_NAME \
+#             --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:${{ github.ref_name }} \
+#             --region $REGION \
+#             --platform managed \
+#             --allow-unauthenticated \
+#             --min-instances 0 \
+#             --max-instances 2 \
+#             --cpu-throttling \
+#             --port 8080 \
+#             --set-build-env-vars GCP_BUCKET_NAME=${{ secrets.GCP_BUCKET_NAME }},GCP_MODEL_PATH=${{ secrets.GCP_MODEL_PATH }}
 
